@@ -39,6 +39,11 @@ def open_db(reset):
     os.makedirs("data", exist_ok=True)
     # check_same_thread=False because MQTT calls us from its own thread.
     db = sqlite3.connect(DB_PATH, check_same_thread=False)
+    # Faster saving. WAL mode lets the dashboard read while we write, and
+    # synchronous=NORMAL skips the slow disk flush after every single reading.
+    # This matters during a time skip, when many readings arrive at once.
+    db.execute("PRAGMA journal_mode=WAL")
+    db.execute("PRAGMA synchronous=NORMAL")
     if reset:
         db.execute("DROP TABLE IF EXISTS readings")
     db.execute("""

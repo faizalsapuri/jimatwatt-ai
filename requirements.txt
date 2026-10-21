@@ -5,13 +5,16 @@ certifi==2026.10.19
 charset-normalizer==3.5.2
 click==8.5.0
 cloudpickle==3.1.2
+defusedxml==0.7.1
+fonttools==4.67.0
+fpdf2==2.8.9
 h11==0.16.0
 idna==3.20
 itsdangerous==2.2.0
 Jinja2==3.1.6
 joblib==1.6.0
-jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
+jsonschema==4.26.0
 MarkupSafe==3.0.4
 narwhals==2.27.1
 numpy==2.5.4

@@ -12,6 +12,7 @@ MQTT topics
   sdp/elmina/ahu            reading from the AHU fan sensor
   sdp/elmina/solar          reading from the rooftop solar meter
   sdp/elmina/control/fault  (we listen) switch a fault on or off
+  sdp/elmina/control/skip   (we listen) jump simulated time ahead, for the demo
   sdp/elmina/status/faults  (we publish, retained) faults that are currently on
 
 Reading payload (JSON)
@@ -21,6 +22,10 @@ Reading payload (JSON)
 Fault control payload (JSON)
   {"device": "chiller", "type": "dirty_cooling_tower"}   switch on, starts now
   {"device": "chiller", "type": "none"}                  switch off
+
+Time skip payload (JSON)
+  {"hours": 6}   send the next 6 hours of readings at once, with no waiting.
+                 Every reading is still published and saved, nothing is lost.
 
 Run from the project folder:
     python simulator\\publisher.py
@@ -47,11 +52,15 @@ SEED = 2026                                    # different seed from the history
 
 TOPIC_BASE = "sdp/elmina"
 TOPIC_CONTROL = TOPIC_BASE + "/control/fault"
+TOPIC_SKIP = TOPIC_BASE + "/control/skip"
 TOPIC_STATUS = TOPIC_BASE + "/status/faults"
+
+SKIP_PAUSE = 0.001  # tiny pause between skipped readings so MQTT is not flooded
 
 # Faults that are currently switched on, one per device at most.
 active_faults = {"chiller": None, "ahu": None, "solar": None}
 current_ts = LIVE_START
+skip_ticks = 0      # readings still to send fast because of a time skip
 
 
 def publish_fault_status(client):
@@ -66,11 +75,29 @@ def publish_fault_status(client):
 def on_connect(client, userdata, flags, reason_code, properties):
     print("Connected to MQTT broker:", reason_code)
     client.subscribe(TOPIC_CONTROL)
+    client.subscribe(TOPIC_SKIP)
     publish_fault_status(client)
 
 
+def handle_skip(msg):
+    """Add a time skip. 1 hour = 4 readings of 15 minutes."""
+    global skip_ticks
+    try:
+        hours = float(json.loads(msg.payload.decode())["hours"])
+    except (ValueError, KeyError, TypeError):
+        print("Ignored bad skip message:", msg.payload)
+        return
+    if 0 < hours <= 72:
+        skip_ticks += int(hours * 4)
+        print(">>> Skipping ahead %g simulated hours from %s" % (hours, current_ts))
+
+
 def on_message(client, userdata, msg):
-    """Handle a fault on or off command."""
+    """Handle a fault on or off command, or a time skip."""
+    if msg.topic == TOPIC_SKIP:
+        handle_skip(msg)
+        return
+
     try:
         cmd = json.loads(msg.payload.decode())
         device, ftype = cmd["device"], cmd["type"]
@@ -96,7 +123,7 @@ def on_message(client, userdata, msg):
 
 
 def main():
-    global current_ts
+    global current_ts, skip_ticks
 
     parser = argparse.ArgumentParser(description="Simulated IoT power sensors")
     parser.add_argument("--broker", default="localhost")
@@ -143,7 +170,12 @@ def main():
                 print(ts, " chiller %.1f kW  ahu %.1f kW  solar %.1f kW" % (
                     sent["chiller"], sent["ahu"], sent["solar"]))
 
-            time.sleep(args.interval)
+            # Normal speed waits args.interval. During a time skip we hardly wait.
+            if skip_ticks > 0:
+                skip_ticks -= 1
+                time.sleep(SKIP_PAUSE)
+            else:
+                time.sleep(args.interval)
     except KeyboardInterrupt:
         print("Stopped.")
     finally:

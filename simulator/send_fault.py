@@ -17,12 +17,19 @@ import sys
 import paho.mqtt.publish as publish
 
 TOPIC_CONTROL = "sdp/elmina/control/fault"
+TOPIC_SKIP = "sdp/elmina/control/skip"
 
 
 def send_fault(device, fault_type, broker="localhost", port=1883):
     """Publish one fault command to the simulator."""
     payload = json.dumps({"device": device, "type": fault_type})
     publish.single(TOPIC_CONTROL, payload, hostname=broker, port=port)
+
+
+def send_skip(hours, broker="localhost", port=1883):
+    """Ask the simulator to jump ahead in SIMULATED time (used by the dashboard)."""
+    payload = json.dumps({"hours": hours})
+    publish.single(TOPIC_SKIP, payload, hostname=broker, port=port)
 
 
 if __name__ == "__main__":
