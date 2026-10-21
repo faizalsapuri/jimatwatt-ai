@@ -32,7 +32,7 @@ Simulated IoT sensors  ->  MQTT broker  ->  Edge AI     ->  Database  ->  Dashbo
 | Mosquitto | The network carrying sensor data | Mosquitto 2.1.2 |
 | `edge/subscriber.py`, `edge/detector.py` | The edge computer in the plant room | Python, XGBoost |
 | `data/readings.db` | Storage on the edge computer | SQLite |
-| `dashboard/app.py` | What the maintenance team sees | Streamlit |
+| `dashboard/app.py` | Web app with 2 pages, Live demo and Dashboard | Streamlit |
 
 The AI runs on the edge, so it can work without internet and keeps building data on site. For this demo, one laptop plays the sensors, the network and the edge computer.
 
@@ -42,7 +42,7 @@ The AI runs on the edge, so it can work without internet and keeps building data
 |---|---|
 | `simulator/` | Simulated sensors, weather, fault injection, 60 day history generator, MQTT publisher |
 | `edge/` | MQTT subscriber, model features, training, fault detection, likely cause rules, waste projection, carbon summary |
-| `dashboard/` | Streamlit dashboard and PDF report |
+| `dashboard/` | Streamlit app. `page_demo.py` (Live demo picture and demo controls), `page_dashboard.py` (status, maintenance list, carbon, reports), `common.py` (shared settings), `pdf_report.py` (PDF report) |
 | `models/` | Trained XGBoost models (one per device) and accuracy scores |
 | `data/` | SQLite database and generated CSV files (not stored in Git, created when you run the code) |
 
@@ -86,15 +86,20 @@ Simulated time starts on 23 Oct 2026 and runs fast. One simulated day takes abou
 streamlit run dashboard\app.py
 ```
 
-The dashboard opens in the browser and refreshes every 3 seconds.
+The app opens in the browser and refreshes every 3 seconds. It has 2 pages, linked at the top.
+
+- **Live demo.** A picture of the example site. Grid supply, main switchboard, the 4 devices, a power sensor on each line, and the edge computer. Moving dashes show power and data flowing. Each power line takes the colour of the AI status (green OK, orange WATCH, red FAULT). A purple tag shows which simulated faults are switched on. The demo control and time control buttons are on this page.
+- **Dashboard.** What the maintenance team sees. Device cards with actual and expected power, the maintenance list, the carbon and savings summary, and the daily reports.
+
+The line colour comes only from the AI detector, never from the inject button. So the picture turns red only when the AI has found the fault by itself.
 
 ### Demo steps
 
-1. Wait for the first full simulated day, or click **Skip 6 hours** in the sidebar 4 times. All 4 devices should show **OK**.
-2. In the sidebar under **Demo control**, choose a device and a fault, then click **Inject fault**.
-3. Click **Skip 6 hours** a few more times. The device moves to **WATCH**, then **FAULT**, with a likely cause hint and its future waste over 30 days.
-4. Check the maintenance list and the carbon and savings summary, then download the daily report.
-5. Click **Clear fault** to switch the fault off.
+1. On the **Live demo** page, wait for the first full simulated day, or click **Skip 6 hours** 4 times. All 4 power lines should turn green (**OK**).
+2. Under **Demo control**, choose a device and a fault, then click **Inject fault**. A purple "Fault injected" tag appears under the device.
+3. Click **Skip 6 hours** a few more times. The line turns orange (**WATCH**), then red (**FAULT**).
+4. Open the **Dashboard** page for the likely cause hint, future waste over 30 days, the maintenance list and the carbon and savings summary. Download the daily report.
+5. Back on the **Live demo** page, click **Clear fault** to switch the fault off.
 
 You can also inject faults from the command line while the publisher is running.
 
