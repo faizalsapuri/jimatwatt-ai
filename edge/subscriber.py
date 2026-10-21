@@ -1,12 +1,12 @@
 """
 subscriber.py
-Part of the EDGE COMPUTER. It listens to the 3 simulated sensors on the MQTT
+Part of the EDGE COMPUTER. It listens to the 4 simulated sensors on the MQTT
 broker and saves every reading into a local SQLite database.
 ALL READINGS ARE SIMULATED.
 
 Database file   data/readings.db
 Table           readings
-  device     chiller, ahu or solar
+  device     chiller, ahu, solar or pump
   timestamp  start of the 15 minute reading, for example 2026-10-23T09:15:00
   kw         power in kW (for solar this is power produced)
   temp_c, humidity, cloud   simulated weather at that time
@@ -28,8 +28,8 @@ import sqlite3
 import paho.mqtt.client as mqtt
 
 DB_PATH = os.path.join("data", "readings.db")
-TOPIC_READINGS = "sdp/elmina/+"   # + matches chiller, ahu and solar only
-DEVICES = ("chiller", "ahu", "solar")
+TOPIC_READINGS = "sdp/elmina/+"   # + matches chiller, ahu, solar and pump only
+DEVICES = ("chiller", "ahu", "solar", "pump")
 
 saved_count = 0
 
@@ -89,8 +89,8 @@ def on_message(client, userdata, msg):
     db.commit()
     saved_count += 1
 
-    # Print once per simulated hour (3 devices per tick) so the screen stays calm.
-    if r["device"] == "solar" and r["timestamp"].endswith(":00:00"):
+    # Print once per simulated hour (4 devices per tick) so the screen stays calm.
+    if r["device"] == "pump" and r["timestamp"].endswith(":00:00"):
         print("Saved up to", r["timestamp"], "| total rows saved this run:", saved_count)
 
 

@@ -4,7 +4,7 @@ Trains one XGBoost "normal behaviour" model per device. Runs on the LAPTOP.
 The edge part only loads these saved models later.
 
 Data   data/history.csv, about 60 days of SIMULATED healthy readings
-Output models/chiller.json, models/ahu.json, models/solar.json
+Output models/chiller.json, models/ahu.json, models/solar.json, models/pump.json
        models/metrics.json  (accuracy numbers, shown later on the dashboard)
 
 How we check accuracy
@@ -29,7 +29,7 @@ from features import make_features
 
 HISTORY_FILE = os.path.join("data", "history.csv")
 MODEL_DIR = "models"
-DEVICES = ["chiller", "ahu", "solar"]
+DEVICES = ["chiller", "ahu", "solar", "pump"]
 TEST_DAYS = 12
 
 # Small, simple settings. Enough for this data and fast to train.

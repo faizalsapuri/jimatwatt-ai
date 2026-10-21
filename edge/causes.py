@@ -47,12 +47,20 @@ HINTS = {
                     "or a tripped breaker. Check the inverter first.",
         "unclear": UNCLEAR_HINT,
     },
+    "pump": {
+        "gradual": "Pump power creeping up slowly. Likely cause is a clogged "
+                   "strainer or a worn impeller. Check and clean the strainer first.",
+        "sudden": "Pump power jumped up suddenly and stays high. Likely cause is "
+                  "the speed drive (VSD) stuck at full speed or set to bypass. "
+                  "Check the drive settings.",
+        "unclear": UNCLEAR_HINT,
+    },
 }
 
 
 def likely_cause(device, flagged_pcts, limit_pct):
     """
-    device         chiller, ahu or solar
+    device         chiller, ahu, solar or pump
     flagged_pcts   waste % of the flagged full days, oldest first
     limit_pct      the detector limit for this device
     Returns (shape, hint text), or (None, None) if nothing is flagged.

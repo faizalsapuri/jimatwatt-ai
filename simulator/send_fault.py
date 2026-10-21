@@ -8,6 +8,8 @@ Examples, from the project folder:
     python simulator\\send_fault.py ahu stuck_damper
     python simulator\\send_fault.py solar dust
     python simulator\\send_fault.py solar inverter_failure
+    python simulator\\send_fault.py pump clogged_strainer
+    python simulator\\send_fault.py pump vsd_stuck_full
     python simulator\\send_fault.py chiller none          (switch off)
 """
 

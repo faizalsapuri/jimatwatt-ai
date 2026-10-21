@@ -1,6 +1,6 @@
 """
 publisher.py
-Plays the role of the 3 clamp-on IoT power sensors. ALL READINGS ARE SIMULATED.
+Plays the role of the 4 clamp-on IoT power sensors. ALL READINGS ARE SIMULATED.
 
 Every tick it creates one 15 minute reading per device and publishes it to the
 MQTT broker (Mosquitto). Simulated time starts where the 60 day history ends,
@@ -11,6 +11,7 @@ MQTT topics
   sdp/elmina/chiller        reading from the chiller sensor
   sdp/elmina/ahu            reading from the AHU fan sensor
   sdp/elmina/solar          reading from the rooftop solar meter
+  sdp/elmina/pump           reading from the chilled water pump sensor
   sdp/elmina/control/fault  (we listen) switch a fault on or off
   sdp/elmina/control/skip   (we listen) jump simulated time ahead, for the demo
   sdp/elmina/status/faults  (we publish, retained) faults that are currently on
@@ -44,11 +45,13 @@ from ahu import ahu_power_kw
 from chiller import chiller_power_kw
 from environment import make_weather
 from faults import FAULT_TYPES, apply_fault
+from pump import pump_power_kw
 from solar import solar_power_kw
 
 LIVE_START = pd.Timestamp("2026-10-23 00:00")  # right after the 60 day history
 LIVE_DAYS = 365                                # plenty of simulated days for a demo
 SEED = 2026                                    # different seed from the history
+PUMP_SEED = 2126                               # own seed for the pump (4th device)
 
 TOPIC_BASE = "sdp/elmina"
 TOPIC_CONTROL = TOPIC_BASE + "/control/fault"
@@ -58,7 +61,7 @@ TOPIC_STATUS = TOPIC_BASE + "/status/faults"
 SKIP_PAUSE = 0.001  # tiny pause between skipped readings so MQTT is not flooded
 
 # Faults that are currently switched on, one per device at most.
-active_faults = {"chiller": None, "ahu": None, "solar": None}
+active_faults = {"chiller": None, "ahu": None, "solar": None, "pump": None}
 current_ts = LIVE_START
 skip_ticks = 0      # readings still to send fast because of a time skip
 
@@ -133,6 +136,7 @@ def main():
     args = parser.parse_args()
 
     rng = np.random.default_rng(SEED)
+    pump_rng = np.random.default_rng(PUMP_SEED)  # keeps the first 3 devices unchanged
     weather = make_weather(start=LIVE_START, days=LIVE_DAYS, rng=rng)
 
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="sdp-sensor-simulator")
@@ -149,6 +153,7 @@ def main():
                 "chiller": chiller_power_kw(ts, row["temp_c"], rng),
                 "ahu": ahu_power_kw(ts, row["temp_c"], rng),
                 "solar": solar_power_kw(ts, row["temp_c"], row["cloud"], rng),
+                "pump": pump_power_kw(ts, row["temp_c"], pump_rng),
             }
             sent = {}
             for device, kw in healthy.items():
@@ -167,8 +172,8 @@ def main():
 
             # Print once per simulated hour so the screen is not flooded.
             if ts.minute == 0:
-                print(ts, " chiller %.1f kW  ahu %.1f kW  solar %.1f kW" % (
-                    sent["chiller"], sent["ahu"], sent["solar"]))
+                print(ts, " chiller %.1f kW  ahu %.1f kW  solar %.1f kW  pump %.1f kW" % (
+                    sent["chiller"], sent["ahu"], sent["solar"], sent["pump"]))
 
             # Normal speed waits args.interval. During a time skip we hardly wait.
             if skip_ticks > 0:

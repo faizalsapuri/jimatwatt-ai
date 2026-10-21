@@ -20,5 +20,12 @@
     "daily_nmbe": 0.2,
     "pass": true
   },
+  "pump": {
+    "hourly_cv_rmse": 1.6,
+    "hourly_nmbe": -0.0,
+    "daily_cv_rmse": 0.2,
+    "daily_nmbe": -0.0,
+    "pass": true
+  },
   "note": "Scored on SIMULATED data, last 12 days held out"
 }

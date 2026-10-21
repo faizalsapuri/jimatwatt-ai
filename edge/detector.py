@@ -8,7 +8,7 @@ How it works
   2. Ask each trained model "what should this device use (or produce) now?"
   3. Add up actual and expected energy for each full day (kWh per day).
   4. Waste per day
-       chiller, ahu  actual - expected   (extra energy used)
+       chiller, ahu, pump  actual - expected   (extra energy used)
        solar         expected - actual   (energy we failed to produce)
   5. Flag a fault only when waste stays above the limit for several days
      in a row. One odd day (a sales event, a holiday) is not enough.
@@ -39,10 +39,10 @@ from projection import project_waste
 
 DB_PATH = os.path.join("data", "readings.db")
 MODEL_DIR = "models"
-DEVICES = ["chiller", "ahu", "solar"]
+DEVICES = ["chiller", "ahu", "solar", "pump"]
 
 # Limits per device, as % of expected kWh per day.
-LIMIT_PCT = {"chiller": 2.0, "ahu": 5.0, "solar": 3.0}
+LIMIT_PCT = {"chiller": 2.0, "ahu": 5.0, "solar": 3.0, "pump": 3.0}
 DAYS_IN_A_ROW = 2      # full days above the limit before we say FAULT
 SEVERE_PCT = 50.0      # e.g. inverter failure. FAULT after just 1 full day
 

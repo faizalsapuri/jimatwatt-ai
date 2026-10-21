@@ -6,7 +6,8 @@ ALL DATA IS SIMULATED, and the PDF says so on every page.
 It shows the same facts as the .txt report
   1. Device status for the latest full day
   2. Maintenance list, ranked by RM wasted per day
-  3. Notes on likely cause, future waste, tariff and CO2 factor
+  3. Carbon and savings summary, all flagged devices added together
+  4. Notes on likely cause, future waste, tariff and CO2 factor
 
 Uses fpdf2 (pip install fpdf2). Built in Helvetica font, so text must be
 plain English letters (no special symbols).
@@ -15,6 +16,7 @@ plain English letters (no special symbols).
 from fpdf import FPDF
 from fpdf.fonts import FontFace
 
+from carbon import carbon_summary
 from detector import DEVICES, LIMIT_PCT
 from projection import GRID_KG_CO2_PER_KWH, TARIFF_RM_PER_KWH
 
@@ -139,8 +141,31 @@ def make_pdf(results, latest_time, names):
                 row.cell(range_text(p["co2_kg_low"], p["co2_kg_high"]))
                 row.cell(r["likely_cause"])
 
-    # 3. Notes
-    section_title(pdf, "3. Notes")
+    # 3. Carbon and savings summary
+    section_title(pdf, "3. Carbon and savings summary (all flagged devices)")
+    pdf.set_font("Helvetica", "", 9)
+    s = carbon_summary(results)
+    if s is None:
+        pdf.set_text_color(*STATUS_RGB["OK"])
+        pdf.cell(0, 7, "No waste detected. All devices are within their normal range.",
+                 new_x="LMARGIN", new_y="NEXT")
+        pdf.set_text_color(20, 20, 20)
+    else:
+        with pdf.table(col_widths=(60, 40, 40, 40), headings_style=head_style,
+                       text_align="LEFT", line_height=6) as table:
+            table.row(["%d device(s) needing action" % s["devices_flagged"],
+                       "kWh", "RM", "kg CO2"])
+            table.row(["Wasted so far", f"{s['so_far_kwh']:,}",
+                       "RM " + f"{s['so_far_rm']:,}", f"{s['so_far_co2_kg']:,}"])
+            table.row(["Waste now, per day", "%.1f" % s["now_kwh_per_day"],
+                       "RM %.2f" % s["now_rm_per_day"], "%.1f" % s["now_co2_kg_per_day"]])
+            table.row(["Avoidable in next %d days" % s["days_ahead"],
+                       range_text(s["next_kwh_low"], s["next_kwh_high"]),
+                       range_text(s["next_rm_low"], s["next_rm_high"], "RM "),
+                       range_text(s["next_co2_kg_low"], s["next_co2_kg_high"])])
+
+    # 4. Notes
+    section_title(pdf, "4. Notes")
     pdf.set_font("Helvetica", "", 9)
     notes = [
         "Likely cause is a hint to check first. Power data alone cannot confirm the cause.",

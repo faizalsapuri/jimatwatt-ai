@@ -8,7 +8,7 @@ We give two numbers, a range
   high  waste keeps growing at the same speed as during the flagged days
         (only for "gradual" faults, a sudden or shutdown fault stays flat)
 The high case stops growing at a limit. Solar cannot lose more than 100% of
-its output. For chiller and AHU we ASSUME extra use stops at 30% of expected.
+its output. For chiller, AHU and pump we ASSUME extra use stops at 30% of expected.
 
 Units
   kWh     energy wasted (or, for solar, energy not produced)
@@ -35,7 +35,7 @@ MAX_EXTRA_FRACTION = 0.30   # demo assumption, see the high case below
 
 def project_waste(device, flagged_waste_kwh, flagged_expected_kwh, shape, days=DAYS_AHEAD):
     """
-    device                chiller, ahu or solar
+    device                chiller, ahu, solar or pump
     flagged_waste_kwh     waste kWh of each flagged full day, oldest first
     flagged_expected_kwh  expected kWh of the same days
     shape                 "gradual", "sudden" or "shutdown" (from causes.py)

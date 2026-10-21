@@ -3,11 +3,11 @@ app.py
 The DASHBOARD for the maintenance team. ALL DATA IS SIMULATED.
 
 It reads the same SQLite database that edge/subscriber.py fills, runs the
-edge detector, and shows the status of the 3 devices. The page refreshes
+edge detector, and shows the status of the 4 devices. The page refreshes
 itself every few seconds, so you can watch the demo live.
 
 What it shows
-  Step 1  Live status of the 3 devices (OK, WATCH, FAULT, WAITING)
+  Step 1  Live status of the 4 devices (OK, WATCH, FAULT, WAITING)
           "Simulated data" label always on screen
   Step 2  Maintenance list, flagged devices ranked by RM wasted per day,
           with future waste over 30 days in RM and kg CO2
@@ -15,6 +15,7 @@ What it shows
   Step 4  Daily report download (.txt) and daily data download (.csv)
   Extra   Time control button that skips 6 SIMULATED hours per click
   Extra   Daily report as PDF (dashboard/pdf_report.py, needs fpdf2)
+  Extra   Carbon and savings summary for all flagged devices (edge/carbon.py)
 
 Run from the project folder (publisher and subscriber must be running):
     streamlit run dashboard\\app.py
@@ -32,6 +33,7 @@ sys.path.insert(0, os.path.abspath(EDGE_DIR))
 
 from detector import DB_PATH, DEVICES, LIMIT_PCT, check_all, load_readings  # noqa: E402
 from projection import GRID_KG_CO2_PER_KWH, TARIFF_RM_PER_KWH  # noqa: E402
+from carbon import carbon_summary  # noqa: E402
 from pdf_report import make_pdf  # noqa: E402  (dashboard/pdf_report.py)
 
 # Let us import send_fault() from simulator/ for the demo button.
@@ -43,10 +45,12 @@ SKIP_HOURS = 6   # simulated hours per click of the "Skip" button
 
 REFRESH_SECONDS = 3   # how often the live part of the page updates
 
-NAMES = {"chiller": "Chiller", "ahu": "AHU fan", "solar": "Rooftop solar"}
+NAMES = {"chiller": "Chiller", "ahu": "AHU fan", "solar": "Rooftop solar",
+         "pump": "Chilled water pump"}
 SIZES = {"chiller": "500 RT, about 325 kW (example size)",
          "ahu": "30 kW fan (example size)",
-         "solar": "200 kWp (example size)"}
+         "solar": "200 kWp (example size)",
+         "pump": "37 kW with speed drive (example size)"}
 # Streamlit colour tags for each status.
 COLOURS = {"OK": "green", "WATCH": "orange", "FAULT": "red", "WAITING": "gray"}
 
@@ -117,6 +121,7 @@ def live_status():
                "tuned for simulated data.")
 
     maintenance_list(results)
+    carbon_panel(results)
     report_downloads(results, latest_time)
 
 
@@ -159,6 +164,22 @@ def report_text(results, latest_time):
             p["days"], range_text(p["rm_low"], p["rm_high"], "RM "),
             range_text(p["co2_kg_low"], p["co2_kg_high"])))
         lines.append("   %s" % r["likely_cause"])
+    lines.append("")
+
+    lines.append("CARBON AND SAVINGS SUMMARY (all flagged devices)")
+    s = carbon_summary(results)
+    if s is None:
+        lines.append("No waste detected. All devices are within their normal range.")
+    else:
+        lines.append("- Devices needing action. %d" % s["devices_flagged"])
+        lines.append("- Wasted so far. %s kWh, RM %s, %s kg CO2." % (
+            f"{s['so_far_kwh']:,}", f"{s['so_far_rm']:,}", f"{s['so_far_co2_kg']:,}"))
+        lines.append("- Waste now. %.1f kWh/day, RM %.2f/day, %.1f kg CO2/day." % (
+            s["now_kwh_per_day"], s["now_rm_per_day"], s["now_co2_kg_per_day"]))
+        lines.append("- Can be avoided in the next %d days by fixing now. %s kWh, %s, %s kg CO2." % (
+            s["days_ahead"], range_text(s["next_kwh_low"], s["next_kwh_high"]),
+            range_text(s["next_rm_low"], s["next_rm_high"], "RM "),
+            range_text(s["next_co2_kg_low"], s["next_co2_kg_high"])))
     lines.append("")
 
     lines += ["NOTES",
@@ -263,12 +284,54 @@ def maintenance_list(results):
                % (TARIFF_RM_PER_KWH * 100, GRID_KG_CO2_PER_KWH))
 
 
+def carbon_panel(results):
+    """Building totals for all flagged devices, for facilities and sustainability teams."""
+    st.header("Carbon and savings summary")
+    st.caption("All flagged devices added together. SIMULATED DATA.")
+
+    s = carbon_summary(results)
+    if s is None:
+        st.success("No waste detected. All devices are within their normal range.")
+        return
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Devices needing action", s["devices_flagged"])
+    c2.metric("Wasted so far", "RM %s" % f"{s['so_far_rm']:,}",
+              help="Waste on the flagged full days already seen")
+    c2.caption("%s kWh, %s kg CO2" % (f"{s['so_far_kwh']:,}", f"{s['so_far_co2_kg']:,}"))
+    c3.metric("Waste now, per day", "RM %.2f" % s["now_rm_per_day"])
+    c3.caption("%.1f kWh, %.1f kg CO2 per day" % (s["now_kwh_per_day"], s["now_co2_kg_per_day"]))
+    c4.metric("Avoidable in next %d days" % s["days_ahead"],
+              range_text(s["next_rm_low"], s["next_rm_high"], "RM "),
+              help="Energy, money and CO2 that fixing the faults now could avoid")
+    c4.caption("%s kWh, %s kg CO2" % (range_text(s["next_kwh_low"], s["next_kwh_high"]),
+                                     range_text(s["next_co2_kg_low"], s["next_co2_kg_high"])))
+
+    table = pd.DataFrame([{
+        "Device": NAMES[x["device"]],
+        "Status": x["status"],
+        "Flagged days": x["days"],
+        "Wasted so far (kg CO2)": x["so_far_co2_kg"],
+        "Waste now (kg CO2/day)": x["now_co2_kg_per_day"],
+        "Avoidable next %d days (kg CO2)" % s["days_ahead"]:
+            range_text(x["next_co2_kg_low"], x["next_co2_kg_high"]),
+    } for x in s["rows"]])
+    st.dataframe(table, hide_index=True, width="stretch")
+
+    st.caption("For solar, waste is energy the panels failed to make, which the "
+               "building then buys from the grid. CO2 uses %.3f kg per kWh "
+               "(Energy Commission, Peninsular grid 2023, provisional). RM uses an "
+               "assumed tariff, energy charge only." % GRID_KG_CO2_PER_KWH)
+
+
 # Faults the simulator knows (same names as simulator/faults.py).
 FAULT_CHOICES = {
     "chiller": {"Dirty cooling tower (gradual)": "dirty_cooling_tower"},
     "ahu": {"Stuck damper (sudden)": "stuck_damper"},
     "solar": {"Dust on panels (gradual)": "dust",
               "Inverter failure (shutdown)": "inverter_failure"},
+    "pump": {"Clogged strainer (gradual)": "clogged_strainer",
+             "Speed drive stuck at full speed (sudden)": "vsd_stuck_full"},
 }
 
 

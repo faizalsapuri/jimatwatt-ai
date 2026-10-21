@@ -12,10 +12,10 @@ Faulty or worn out equipment in a building silently wastes electricity, and nobo
 
 ## What the system does
 
-1. **Monitor.** Reads the power of 3 devices every 15 minutes. A chiller, an air handling unit (AHU) fan and a rooftop solar system.
+1. **Monitor.** Reads the power of 4 devices every 15 minutes. A chiller, an air handling unit (AHU) fan, a chilled water pump and a rooftop solar system. The same engine handles every device type, so adding a new device needs a simulator (or a real sensor) and one trained model, with no new AI code.
 2. **Detect.** Compares each day's actual energy with what a trained model expected. Flags a device only when the gap lasts, not on a single odd reading.
 3. **Predict future waste.** Estimates how much energy (kWh), money (RM) and carbon (kg CO2) the fault will waste over the next 30 days if it is not fixed. It does **not** predict when a machine will break.
-4. **Report.** Shows a maintenance list ranked by RM wasted per day, with a daily report as PDF, TXT and CSV.
+4. **Report.** Shows a maintenance list ranked by RM wasted per day, a carbon and savings summary for the whole building, and a daily report as PDF, TXT and CSV.
 
 Each flagged device also gets a **likely cause** hint. Power data alone cannot prove the exact fault, so the hint is never shown as a confirmed cause.
 
@@ -28,7 +28,7 @@ Simulated IoT sensors  ->  MQTT broker  ->  Edge AI     ->  Database  ->  Dashbo
 
 | Part | Plays the role of | Tool |
 |---|---|---|
-| `simulator/publisher.py` | Clamp-on power sensors on the 3 devices | Python, paho-mqtt |
+| `simulator/publisher.py` | Clamp-on power sensors on the 4 devices | Python, paho-mqtt |
 | Mosquitto | The network carrying sensor data | Mosquitto 2.1.2 |
 | `edge/subscriber.py`, `edge/detector.py` | The edge computer in the plant room | Python, XGBoost |
 | `data/readings.db` | Storage on the edge computer | SQLite |
@@ -41,7 +41,7 @@ The AI runs on the edge, so it can work without internet and keeps building data
 | Folder | What is inside |
 |---|---|
 | `simulator/` | Simulated sensors, weather, fault injection, 60 day history generator, MQTT publisher |
-| `edge/` | MQTT subscriber, model features, training, fault detection, likely cause rules, waste projection |
+| `edge/` | MQTT subscriber, model features, training, fault detection, likely cause rules, waste projection, carbon summary |
 | `dashboard/` | Streamlit dashboard and PDF report |
 | `models/` | Trained XGBoost models (one per device) and accuracy scores |
 | `data/` | SQLite database and generated CSV files (not stored in Git, created when you run the code) |
@@ -90,10 +90,10 @@ The dashboard opens in the browser and refreshes every 3 seconds.
 
 ### Demo steps
 
-1. Wait for the first full simulated day, or click **Skip 6 hours** in the sidebar 4 times. All 3 devices should show **OK**.
+1. Wait for the first full simulated day, or click **Skip 6 hours** in the sidebar 4 times. All 4 devices should show **OK**.
 2. In the sidebar under **Demo control**, choose a device and a fault, then click **Inject fault**.
 3. Click **Skip 6 hours** a few more times. The device moves to **WATCH**, then **FAULT**, with a likely cause hint and its future waste over 30 days.
-4. Check the maintenance list and download the daily report.
+4. Check the maintenance list and the carbon and savings summary, then download the daily report.
 5. Click **Clear fault** to switch the fault off.
 
 You can also inject faults from the command line while the publisher is running.
@@ -103,6 +103,8 @@ python simulator\send_fault.py chiller dirty_cooling_tower
 python simulator\send_fault.py ahu stuck_damper
 python simulator\send_fault.py solar dust
 python simulator\send_fault.py solar inverter_failure
+python simulator\send_fault.py pump clogged_strainer
+python simulator\send_fault.py pump vsd_stuck_full
 python simulator\send_fault.py chiller none
 ```
 
@@ -116,6 +118,8 @@ To print the detector result in the terminal, run `python edge\detector.py`.
 | AHU fan | 30 kW | Stuck damper | Fan power jumps up 35% and stays high |
 | Rooftop solar | 200 kWp | Dust build-up | Output drops 1% per day, up to 30% loss |
 | Rooftop solar | 200 kWp | Inverter failure | Output falls to zero |
+| Chilled water pump | 37 kW with speed drive | Clogged strainer | Power creeps up 2% per day, up to 25% extra |
+| Chilled water pump | 37 kW with speed drive | Speed drive stuck at full speed | Power jumps to 95% of the motor rating |
 
 ## Retrain the models (optional)
 
@@ -132,16 +136,26 @@ This creates 60 days of healthy simulated history in `data/history.csv`, trains 
 - Detection uses **full days**, not single 15 minute readings, to avoid false alarms.
 - A device is **WATCH** after 1 full day above its limit.
 - A device is **FAULT** after 2 full days in a row above its limit, or 1 full day with 50% or more waste.
-- Limits are chiller 2%, AHU 5% and solar 3%. They are tuned for the simulated data.
+- Limits are chiller 2%, AHU 5%, solar 3% and pump 3%. They are tuned for the simulated data.
 - The likely cause hint comes from the shape of the waste. Sudden, gradual or solar shutdown.
 
 ## How future waste is estimated
 
 - Future waste is shown as a range over 30 days.
 - **Low** means waste stays at today's level.
-- **High** means a gradual fault keeps getting worse at its current trend, capped at 30% extra use for the chiller and AHU (a demo assumption) and 100% loss for solar.
+- **High** means a gradual fault keeps getting worse at its current trend, capped at 30% extra use for the chiller, AHU and pump (a demo assumption) and 100% loss for solar.
 - RM uses the TNB Medium Voltage General energy charge of 29.83 sen per kWh (from 1 July 2025). We assume the mall is on this tariff. It covers the energy charge only, so the real RM loss is likely higher.
 - Carbon uses 0.760 kg CO2 per kWh, the Peninsular Malaysia grid emission factor for 2023 (Energy Commission, provisional).
+
+## Carbon and savings summary
+
+The dashboard adds up all flagged devices into one building total, in kWh, RM and kg CO2.
+
+- **Wasted so far.** Waste on the flagged full days already seen.
+- **Waste now.** Per day, at the latest full day's level.
+- **Avoidable in the next 30 days.** The future waste range if nobody fixes the faults. This is what fixing them now could avoid.
+
+For solar, waste is energy the panels failed to make, which the building then buys from the grid. The same summary is in the PDF and TXT reports, so the sustainability team can use it for carbon reporting. Run `python edge\carbon.py` to print it in the terminal.
 
 ## Model accuracy (simulated data)
 
@@ -152,6 +166,7 @@ Scored on the last 12 days of simulated data, which the model did not see in tra
 | Chiller | 2.1% | 0.4% | within 0.2% |
 | AHU fan | 1.6% | 0.4% | within 0.2% |
 | Rooftop solar | 3.6% | 1.7% | within 0.2% |
+| Chilled water pump | 1.5% | 0.2% | within 0.2% |
 
 All pass the ASHRAE Guideline 14 limits. **These scores are very high only because the data is simulated from simple formulas.** They are not real world accuracy. Real buildings will be noisier.
 
@@ -168,7 +183,7 @@ All pass the ASHRAE Guideline 14 limits. **These scores are very high only becau
 ## Next steps
 
 - Test with public fault datasets from LBNL (chiller plant and AHU).
-- Add more device types such as pumps, lighting and EV chargers using the same engine.
+- Add more device types such as lighting, lifts and EV chargers using the same engine.
 - Pilot with real clamp-on power sensors and a small edge computer at one SDP building.
 
 ## Tech stack

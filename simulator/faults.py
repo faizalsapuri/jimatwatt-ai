@@ -11,6 +11,8 @@ These are made-up fault shapes for the demo, not measured fault data.
   ahu      stuck_damper         Fan power jumps up 35% and stays high
   solar    dust                 Output slowly drops, -1% per day, down to -30%
   solar    inverter_failure     Output falls to 0 kW straight away
+  pump     clogged_strainer     Power slowly creeps up, +2% per day, up to +25%
+  pump     vsd_stuck_full       Drive stuck at full speed, power jumps to 95% of rated
 
 A fault is a small dict, for example
     {"type": "dirty_cooling_tower", "start": pd.Timestamp("2026-10-23 00:00")}
@@ -21,10 +23,13 @@ Run a quick test from the project folder:
 
 import pandas as pd
 
+from pump import RATED_KW as PUMP_RATED_KW
+
 FAULT_TYPES = {
     "chiller": ["dirty_cooling_tower"],
     "ahu": ["stuck_damper"],
     "solar": ["dust", "inverter_failure"],
+    "pump": ["clogged_strainer", "vsd_stuck_full"],
 }
 
 
@@ -58,6 +63,14 @@ def apply_fault(device, kw, ts, fault):
     if device == "solar" and ftype == "inverter_failure":
         return 0.0
 
+    if device == "pump" and ftype == "clogged_strainer":
+        extra = min(0.02 * d, 0.25)
+        return round(kw * (1 + extra), 2)
+
+    if device == "pump" and ftype == "vsd_stuck_full":
+        # The drive no longer slows the pump down, so it runs near full power.
+        return round(PUMP_RATED_KW * 0.95, 2)
+
     raise ValueError("Unknown fault %s for device %s" % (ftype, device))
 
 
@@ -67,6 +80,7 @@ if __name__ == "__main__":
     from ahu import ahu_power_kw
     from chiller import chiller_power_kw
     from environment import make_weather
+    from pump import pump_power_kw
     from solar import solar_power_kw
 
     # 60 healthy days, then 20 days with a fault switched on.
@@ -79,6 +93,8 @@ if __name__ == "__main__":
         ("ahu", "stuck_damper"),
         ("solar", "dust"),
         ("solar", "inverter_failure"),
+        ("pump", "clogged_strainer"),
+        ("pump", "vsd_stuck_full"),
     ]
 
     print("SIMULATED fault test. Fault starts on", fault_start.date())
@@ -91,6 +107,8 @@ if __name__ == "__main__":
                 kw = chiller_power_kw(ts, row["temp_c"], rng)
             elif device == "ahu":
                 kw = ahu_power_kw(ts, row["temp_c"], rng)
+            elif device == "pump":
+                kw = pump_power_kw(ts, row["temp_c"], rng)
             else:
                 kw = solar_power_kw(ts, row["temp_c"], row["cloud"], rng)
             healthy.append(kw)
