@@ -1,0 +1,16 @@
+# Python virtual environment (each person creates their own)
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Database and generated data (recreated by running the simulator)
+data/*.db
+data/*.csv
+
+# Editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
