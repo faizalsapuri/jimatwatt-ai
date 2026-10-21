@@ -1,0 +1,24 @@
+{
+  "chiller": {
+    "hourly_cv_rmse": 2.1,
+    "hourly_nmbe": -0.0,
+    "daily_cv_rmse": 0.4,
+    "daily_nmbe": -0.0,
+    "pass": true
+  },
+  "ahu": {
+    "hourly_cv_rmse": 1.6,
+    "hourly_nmbe": -0.1,
+    "daily_cv_rmse": 0.4,
+    "daily_nmbe": -0.1,
+    "pass": true
+  },
+  "solar": {
+    "hourly_cv_rmse": 3.6,
+    "hourly_nmbe": 0.2,
+    "daily_cv_rmse": 1.7,
+    "daily_nmbe": 0.2,
+    "pass": true
+  },
+  "note": "Scored on SIMULATED data, last 12 days held out"
+}
