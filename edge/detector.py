@@ -67,17 +67,28 @@ def load_readings(db_path=DB_PATH):
     return df
 
 
-def daily_table(readings, device):
+def power_table(readings, device):
     """
-    Actual vs expected kWh for each day of one device.
-    Columns: actual_kwh, expected_kwh, waste_kwh, waste_pct, full_day
+    Every 15 minute reading of one device, with the power the model expected.
+    Columns: kw (actual), expected_kw (what a healthy device should use or make)
+    The dashboard draws both lines, so you can see the gap when a fault starts.
     """
     d = readings[readings["device"] == device].set_index("timestamp").sort_index()
     if d.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=["kw", "expected_kw"])
+    d["expected_kw"] = np.clip(load_model(device).predict(make_features(d)), 0, None)
+    return d
 
-    expected_kw = np.clip(load_model(device).predict(make_features(d)), 0, None)
-    d["expected_kw"] = expected_kw
+
+def daily_table(power, device):
+    """
+    Actual vs expected kWh for each day of one device.
+    power is the output of power_table().
+    Columns: actual_kwh, expected_kwh, waste_kwh, waste_pct, full_day
+    """
+    if power.empty:
+        return pd.DataFrame()
+    d = power
 
     # A 15 minute reading in kW x 0.25 hours = kWh.
     day = (d[["kw", "expected_kw"]] * 0.25).resample("D").sum()
@@ -99,11 +110,13 @@ def daily_table(readings, device):
 
 def check_device(readings, device):
     """Return a small summary dict with the status of one device."""
-    day = daily_table(readings, device)
+    power = power_table(readings, device)
+    day = daily_table(power, device)
     full = day[day["full_day"]] if not day.empty else day
     result = {"device": device, "status": "OK", "days_above": 0,
               "latest_waste_pct": None, "shape": None, "likely_cause": None,
-              "projection": None, "daily": day}
+              "projection": None, "daily": day,
+              "power": power[["kw", "expected_kw"]]}
     if full.empty:
         result["status"] = "WAITING"   # not one full day of live data yet
         return result
@@ -142,8 +155,10 @@ def check_device(readings, device):
     return result
 
 
-def check_all(db_path=DB_PATH):
-    readings = load_readings(db_path)
+def check_all(db_path=DB_PATH, readings=None):
+    """Check every device. Pass readings if you already loaded them (saves time)."""
+    if readings is None:
+        readings = load_readings(db_path)
     return {dev: check_device(readings, dev) for dev in DEVICES}
 
 

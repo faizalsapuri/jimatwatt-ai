@@ -16,6 +16,7 @@ What it shows
   Extra   Time control button that skips 6 SIMULATED hours per click
   Extra   Daily report as PDF (dashboard/pdf_report.py, needs fpdf2)
   Extra   Carbon and savings summary for all flagged devices (edge/carbon.py)
+  Extra   Each chart shows actual power and the power the AI model expected
 
 Run from the project folder (publisher and subscriber must be running):
     streamlit run dashboard\\app.py
@@ -53,6 +54,9 @@ SIZES = {"chiller": "500 RT, about 325 kW (example size)",
          "pump": "37 kW with speed drive (example size)"}
 # Streamlit colour tags for each status.
 COLOURS = {"OK": "green", "WATCH": "orange", "FAULT": "red", "WAITING": "gray"}
+# Line colours for the device charts.
+ACTUAL_COLOUR = "#1f77b4"     # blue, actual power
+EXPECTED_COLOUR = "#9e9e9e"   # grey, power the AI model expected
 
 st.set_page_config(page_title="Energy Fault Monitor", layout="wide")
 
@@ -80,7 +84,7 @@ def live_status():
         st.info("Waiting for the first readings from subscriber.py ...")
         return
 
-    results = check_all()
+    results = check_all(readings=readings)   # reuse the readings, no second load
     latest_time = readings["timestamp"].max()
     st.markdown("**Simulated time now** %s" % latest_time.strftime("%a %d %b %Y, %H:%M"))
 
@@ -111,11 +115,18 @@ def live_status():
             if r["likely_cause"]:
                 st.write(r["likely_cause"])
 
-            # Small chart of the last 2 simulated days of power.
-            last = dev_rows.set_index("timestamp")["kw"]
-            last = last[last.index >= latest_time - pd.Timedelta(days=2)]
-            st.line_chart(last, height=150)
+            # Chart of the last 2 simulated days. Actual power and the power the
+            # AI model expected for a healthy device. A gap that stays = waste.
+            power = r["power"]
+            last = power[power.index >= latest_time - pd.Timedelta(days=2)]
+            last = last.rename(columns={"kw": "Actual", "expected_kw": "Expected (AI)"})
+            st.line_chart(last, y=["Actual", "Expected (AI)"],
+                          color=[ACTUAL_COLOUR, EXPECTED_COLOUR],
+                          y_label="kW", height=170)
 
+    st.caption("Charts. Blue is the actual power. Grey is what the AI model expects a "
+               "healthy device to use (or, for solar, to produce) in the same hour and "
+               "weather. When the two lines stay apart for days, energy is being wasted.")
     st.caption("Status rules. WATCH after 1 full day above the limit. FAULT after "
                "2 full days in a row, or 50% or more on 1 full day. Limits are "
                "tuned for simulated data.")
