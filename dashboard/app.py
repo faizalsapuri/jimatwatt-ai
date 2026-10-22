@@ -4,7 +4,7 @@ Starts the web app and links its two pages. ALL DATA IS SIMULATED.
 
   Live demo   page_demo.py       Picture of the site with power and data flow,
                                  demo control (inject or clear a SIMULATED
-                                 fault) and time control (skip 6 hours)
+                                 fault) and time control (skip 1 day or 12 hours)
   Dashboard   page_dashboard.py  What the maintenance team sees. Device status,
                                  maintenance list, carbon summary, reports
 

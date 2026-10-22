@@ -18,7 +18,8 @@ for folder in ("edge", "simulator"):
         sys.path.insert(0, path)
 
 REFRESH_SECONDS = 3   # how often the live part of each page updates
-SKIP_HOURS = 6        # simulated hours per click of the "Skip" button
+SKIP_DAY_HOURS = 24   # "Skip 1 day" button, the main button for the demo
+SKIP_HALF_HOURS = 12  # "Skip 12 hours" button, e.g. to jump from night to day
 
 NAMES = {"chiller": "Chiller", "ahu": "AHU fan", "solar": "Rooftop solar",
          "pump": "Chilled water pump"}

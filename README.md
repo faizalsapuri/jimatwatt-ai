@@ -95,9 +95,9 @@ The line colour comes only from the AI detector, never from the inject button. S
 
 ### Demo steps
 
-1. On the **Live demo** page, wait for the first full simulated day, or click **Skip 6 hours** 4 times. All 4 power lines should turn green (**OK**).
+1. On the **Live demo** page, wait for the first full simulated day, or click **Skip 1 day** once. All 4 power lines should turn green (**OK**).
 2. Under **Demo control**, choose a device and a fault, then click **Inject fault**. A purple "Fault injected" tag appears under the device.
-3. Click **Skip 6 hours** a few more times. The line turns orange (**WATCH**), then red (**FAULT**).
+3. Click **Skip 1 day**. The line turns orange (**WATCH**). Click it again and the line turns red (**FAULT**). A slow fault, like a dirty cooling tower, needs up to 4 clicks. Use **Skip 12 hours** to move from night to day, for example to see the solar panels making power.
 4. Open the **Dashboard** page for the likely cause hint, future waste over 30 days, the maintenance list and the carbon and savings summary. Download the daily report.
 5. Back on the **Live demo** page, click **Clear fault** to switch the fault off.
 

@@ -16,7 +16,7 @@ What it shows
      to the edge computer, shown as dotted lines.
   4  A purple "Fault injected" tag shows which SIMULATED faults are on,
      read from the retained MQTT topic sdp/elmina/status/faults.
-  5  Demo control (inject or clear a fault) and time control (skip 6 hours).
+  5  Demo control (inject or clear a fault) and time control (skip 1 day or 12 hours).
 
 Opened through dashboard/app.py:
     streamlit run dashboard\\app.py
@@ -30,7 +30,8 @@ import paho.mqtt.client as mqtt
 import streamlit as st
 
 from common import (FAULT_CHOICES, FAULT_NAMES, NAMES, RATED_KW,
-                    REFRESH_SECONDS, SIMULATED_BANNER, SKIP_HOURS)
+                    REFRESH_SECONDS, SIMULATED_BANNER, SKIP_DAY_HOURS,
+                    SKIP_HALF_HOURS)
 from detector import DB_PATH, DEVICES, LIMIT_PCT, check_all, load_readings
 from send_fault import send_fault, send_skip
 
@@ -317,21 +318,27 @@ def controls():
 
     with col2.container(border=True):
         st.subheader("Time control")
-        st.caption("Jumps SIMULATED time ahead. 4 clicks = 1 simulated day. "
-                   "All readings in between are still sent and saved.")
-        if st.button("Skip %d hours" % SKIP_HOURS, width="stretch"):
+        st.caption("Jumps SIMULATED time ahead. All readings in between are "
+                   "still sent and saved, nothing is skipped.")
+        t1, t2 = st.columns(2)
+        hours = None
+        if t1.button("Skip 1 day", type="primary", width="stretch"):
+            hours = SKIP_DAY_HOURS
+        if t2.button("Skip %d hours" % SKIP_HALF_HOURS, width="stretch"):
+            hours = SKIP_HALF_HOURS
+        if hours:
             try:
-                send_skip(SKIP_HOURS, BROKER, PORT)
-                st.session_state["last_skip"] = "Skipped %d simulated hours" % SKIP_HOURS
+                send_skip(hours, BROKER, PORT)
+                st.session_state["last_skip"] = "Skipped %d simulated hours" % hours
             except OSError:
                 st.session_state["last_skip"] = "Could not reach the MQTT broker"
         if "last_skip" in st.session_state:
             st.info(st.session_state["last_skip"])
 
-    st.caption("How to demo. 1. Inject a fault. 2. Click Skip a few times. "
-               "3. Watch the line turn orange (WATCH), then red (FAULT). The AI "
+    st.caption("How to demo. 1. Inject a fault. 2. Click Skip 1 day. "
+               "3. The line turns orange (WATCH). Click Skip 1 day again and it turns red (FAULT). The AI "
                "decides the colour, not the button. Detection needs full simulated "
-               "days, so it takes 1 to 4 simulated days. 4. Open the Dashboard page "
+               "days. A sudden fault needs about 2 clicks, a slow one up to 4. 4. Open the Dashboard page "
                "for the likely cause, money and carbon.")
 
 
