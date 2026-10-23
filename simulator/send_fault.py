@@ -18,8 +18,8 @@ import sys
 
 import paho.mqtt.publish as publish
 
-TOPIC_CONTROL = "sdp/elmina/control/fault"
-TOPIC_SKIP = "sdp/elmina/control/skip"
+TOPIC_CONTROL = "sdp/kleast/control/fault"
+TOPIC_SKIP = "sdp/kleast/control/skip"
 
 
 def send_fault(device, fault_type, broker="localhost", port=1883):

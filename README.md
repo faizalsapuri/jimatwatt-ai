@@ -4,7 +4,7 @@ SDP University Hackathon 2026, "Township of Tomorrow" (Planet focus).
 
 One edge AI system that watches different equipment in one building, spots faulty or worn out devices early, and shows how much energy, money and carbon each fault will waste if nobody fixes it.
 
-> **Note on data.** All data in this prototype is **simulated** on one laptop. Elmina Lakeside Mall is used only as an example site. No real building data is used. Device sizes are example values.
+> **Note on data.** All data in this prototype is **simulated** on one laptop. KL East Mall is used only as an example site. No real building data is used. Device sizes are example values.
 
 ## The problem
 
@@ -190,7 +190,7 @@ All pass the ASHRAE Guideline 14 limits. **These scores are very high only becau
 ## Honest notes and limits
 
 - All data is simulated. No real sensors or real building data are used.
-- Elmina Lakeside Mall is an example pilot site only.
+- KL East Mall is an example pilot site only.
 - The system flags a **likely cause**, not a confirmed cause.
 - It predicts future **waste**, not the date a machine will break down.
 - Detection limits and the 30% cap are tuned for simulated data and would need tuning on a real site.

@@ -8,13 +8,13 @@ MQTT broker (Mosquitto). Simulated time starts where the 60 day history ends,
 so 1 simulated day passes in about 48 seconds. This makes the demo fast.
 
 MQTT topics
-  sdp/elmina/chiller        reading from the chiller sensor
-  sdp/elmina/ahu            reading from the AHU fan sensor
-  sdp/elmina/solar          reading from the rooftop solar meter
-  sdp/elmina/pump           reading from the chilled water pump sensor
-  sdp/elmina/control/fault  (we listen) switch a fault on or off
-  sdp/elmina/control/skip   (we listen) jump simulated time ahead, for the demo
-  sdp/elmina/status/faults  (we publish, retained) faults that are currently on
+  sdp/kleast/chiller        reading from the chiller sensor
+  sdp/kleast/ahu            reading from the AHU fan sensor
+  sdp/kleast/solar          reading from the rooftop solar meter
+  sdp/kleast/pump           reading from the chilled water pump sensor
+  sdp/kleast/control/fault  (we listen) switch a fault on or off
+  sdp/kleast/control/skip   (we listen) jump simulated time ahead, for the demo
+  sdp/kleast/status/faults  (we publish, retained) faults that are currently on
 
 Reading payload (JSON)
   {"device": "chiller", "timestamp": "2026-10-23T09:15:00", "kw": 182.4,
@@ -53,7 +53,7 @@ LIVE_DAYS = 365                                # plenty of simulated days for a 
 SEED = 2026                                    # different seed from the history
 PUMP_SEED = 2126                               # own seed for the pump (4th device)
 
-TOPIC_BASE = "sdp/elmina"
+TOPIC_BASE = "sdp/kleast"
 TOPIC_CONTROL = TOPIC_BASE + "/control/fault"
 TOPIC_SKIP = TOPIC_BASE + "/control/skip"
 TOPIC_STATUS = TOPIC_BASE + "/status/faults"

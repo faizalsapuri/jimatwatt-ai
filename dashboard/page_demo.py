@@ -15,7 +15,7 @@ What it shows
   3  A clamp-on power sensor (S) on each line sends its readings over MQTT
      to the edge computer, shown as dotted lines.
   4  A purple "Fault injected" tag shows which SIMULATED faults are on,
-     read from the retained MQTT topic sdp/elmina/status/faults.
+     read from the retained MQTT topic sdp/kleast/status/faults.
   5  Demo control (inject or clear a fault) and time control (skip 1 day or 12 hours).
 
 Opened through dashboard/app.py:
@@ -36,7 +36,7 @@ from detector import DB_PATH, DEVICES, LIMIT_PCT, check_all, load_readings
 from send_fault import send_fault, send_skip
 
 BROKER, PORT = "localhost", 1883
-TOPIC_STATUS = "sdp/elmina/status/faults"   # same topic as simulator/publisher.py
+TOPIC_STATUS = "sdp/kleast/status/faults"   # same topic as simulator/publisher.py
 
 PICTURE_ORDER = ["chiller", "pump", "ahu", "solar"]   # left to right
 # Shorter fault names where the full name does not fit in the picture.
@@ -243,7 +243,7 @@ def site_svg(results, kw_now, injected, latest_time):
 # 3. The page.
 # ---------------------------------------------------------------------------
 st.title("Live demo")
-st.caption("Example site. Elmina Lakeside Mall. Watch power and data flow, "
+st.caption("Example site. KL East Mall. Watch power and data flow, "
            "inject a simulated fault, and see the AI find it.")
 st.warning(SIMULATED_BANNER)
 

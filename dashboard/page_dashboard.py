@@ -35,7 +35,7 @@ ACTUAL_COLOUR = "#1f77b4"     # blue, actual power
 EXPECTED_COLOUR = "#9e9e9e"   # grey, power the AI model expected
 
 st.title("Energy Fault Monitor")
-st.caption("Example site. Elmina Lakeside Mall. One edge engine watching many devices.")
+st.caption("Example site. KL East Mall. One edge engine watching many devices.")
 
 # The simulated label stays at the top of the page at all times.
 st.warning(SIMULATED_BANNER)
@@ -114,7 +114,7 @@ def report_text(results, latest_time):
     lines = ["DAILY ENERGY FAULT REPORT",
              "SIMULATED DATA. Not from real sensors. Device sizes are example values.",
              "",
-             "Site. Elmina Lakeside Mall (example site)",
+             "Site. KL East Mall (example site)",
              "Simulated time of report. %s" % latest_time.strftime("%a %d %b %Y, %H:%M"),
              ""]
 

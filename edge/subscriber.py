@@ -28,7 +28,7 @@ import sqlite3
 import paho.mqtt.client as mqtt
 
 DB_PATH = os.path.join("data", "readings.db")
-TOPIC_READINGS = "sdp/elmina/+"   # + matches chiller, ahu, solar and pump only
+TOPIC_READINGS = "sdp/kleast/+"   # + matches chiller, ahu, solar and pump only
 DEVICES = ("chiller", "ahu", "solar", "pump")
 
 saved_count = 0

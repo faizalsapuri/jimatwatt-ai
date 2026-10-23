@@ -67,7 +67,7 @@ def make_pdf(results, latest_time, names):
     pdf.set_font("Helvetica", "B", 18)
     pdf.cell(0, 10, "Daily Energy Fault Report", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, "Site. Elmina Lakeside Mall (example site)", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, "Site. KL East Mall (example site)", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, "Simulated time of report. %s" % latest_time.strftime("%a %d %b %Y, %H:%M"),
              new_x="LMARGIN", new_y="NEXT")
 

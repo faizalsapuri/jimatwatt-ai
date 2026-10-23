@@ -1,6 +1,6 @@
 """
 environment.py
-Shared SIMULATED conditions for the example site (Elmina Lakeside Mall).
+Shared SIMULATED conditions for the example site (KL East Mall).
 
 Gives every device the same weather and the same mall opening hours,
 so the chiller, AHU and solar all react to the same "day".
