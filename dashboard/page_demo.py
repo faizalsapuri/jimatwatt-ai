@@ -242,7 +242,7 @@ def site_svg(results, kw_now, injected, latest_time):
 # ---------------------------------------------------------------------------
 # 3. The page.
 # ---------------------------------------------------------------------------
-st.title("Live demo")
+st.title("JimatWatt AI. Live demo")
 st.caption("Example site. KL East Mall. Watch power and data flow, "
            "inject a simulated fault, and see the AI find it.")
 st.warning(SIMULATED_BANNER)

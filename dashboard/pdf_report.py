@@ -41,7 +41,7 @@ class ReportPDF(FPDF):
         self.set_y(-12)
         self.set_font("Helvetica", "I", 8)
         self.set_text_color(110, 110, 110)
-        self.cell(0, 6, "SIMULATED DATA. Prototype for SDP University Hackathon 2026. "
+        self.cell(0, 6, "SIMULATED DATA. JimatWatt AI prototype for SDP University Hackathon 2026. "
                         "Page %d" % self.page_no(), align="C")
 
 
@@ -65,7 +65,7 @@ def make_pdf(results, latest_time, names):
 
     # Title
     pdf.set_font("Helvetica", "B", 18)
-    pdf.cell(0, 10, "Daily Energy Fault Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, "JimatWatt AI. Daily Energy Fault Report", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(0, 6, "Site. KL East Mall (example site)", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, "Simulated time of report. %s" % latest_time.strftime("%a %d %b %Y, %H:%M"),

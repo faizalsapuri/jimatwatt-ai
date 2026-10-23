@@ -1,4 +1,6 @@
-# Energy Fault Monitoring System
+# JimatWatt AI
+
+**Predictive Energy Maintenance for Commercial Townships**
 
 SDP University Hackathon 2026, "Township of Tomorrow" (Planet focus).
 
@@ -53,8 +55,8 @@ The AI runs on the edge, so it can work without internet and keeps building data
 3. Clone the repo, create the virtual environment and install the libraries.
 
 ```powershell
-git clone https://github.com/faizalsapuri/sdp-energy-fault-monitor.git
-cd sdp-energy-fault-monitor
+git clone https://github.com/faizalsapuri/jimatwatt-ai.git
+cd jimatwatt-ai
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt

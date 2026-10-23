@@ -16,7 +16,7 @@ import streamlit as st
 
 import common  # noqa: F401  (lets the pages import code from edge/ and simulator/)
 
-st.set_page_config(page_title="Energy Fault Monitor", layout="wide")
+st.set_page_config(page_title="JimatWatt AI", layout="wide")
 
 pages = [
     st.Page("page_demo.py", title="Live demo", icon=":material/bolt:",

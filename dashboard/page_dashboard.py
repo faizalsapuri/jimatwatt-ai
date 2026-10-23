@@ -34,8 +34,9 @@ from pdf_report import make_pdf   # dashboard/pdf_report.py
 ACTUAL_COLOUR = "#1f77b4"     # blue, actual power
 EXPECTED_COLOUR = "#9e9e9e"   # grey, power the AI model expected
 
-st.title("Energy Fault Monitor")
-st.caption("Example site. KL East Mall. One edge engine watching many devices.")
+st.title("JimatWatt AI. Dashboard")
+st.caption("Predictive Energy Maintenance for Commercial Townships. "
+           "Example site. KL East Mall. One edge engine watching many devices.")
 
 # The simulated label stays at the top of the page at all times.
 st.warning(SIMULATED_BANNER)
@@ -111,7 +112,7 @@ def live_status():
 
 def report_text(results, latest_time):
     """Build a plain text daily report that the team can save or print."""
-    lines = ["DAILY ENERGY FAULT REPORT",
+    lines = ["JIMATWATT AI. DAILY ENERGY FAULT REPORT",
              "SIMULATED DATA. Not from real sensors. Device sizes are example values.",
              "",
              "Site. KL East Mall (example site)",
