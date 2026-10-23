@@ -64,7 +64,19 @@ The trained models are already in `models/`, so you do not need to train before 
 
 ## Run the demo
 
-Open **3 PowerShell windows** in the project folder. Activate the virtual environment in each one with `.\venv\Scripts\Activate.ps1`. Run every script from the project folder.
+### Quick start (one click)
+
+Double click `start_demo.bat` in the project folder, or run it from PowerShell.
+
+```powershell
+.\start_demo.bat
+```
+
+It checks that Mosquitto is running, then opens 3 windows, the edge subscriber (with old readings cleared), the simulated sensors and the dashboard. The dashboard opens in the browser. Close the 3 windows to stop the demo.
+
+### Manual start
+
+Or open **3 PowerShell windows** in the project folder. Activate the virtual environment in each one with `.\venv\Scripts\Activate.ps1`. Run every script from the project folder.
 
 **Window 1. Edge subscriber** (saves readings to SQLite). `--reset` clears old readings.
 
